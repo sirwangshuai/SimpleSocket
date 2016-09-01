@@ -5,6 +5,8 @@
  */
 package com.wang.simplesocket2bufprotocal;
 
+import java.util.List;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -39,7 +41,40 @@ public class ClientSocket {
     // ===========================================================
     // Constructors
     // ===========================================================
-    private ClientSocket(){
+    private ClientSocket() throws  Exception{
+        initInternalCommand();
+        initSocket();
+    }
+
+    /**
+     * 初始化Icommed,通过反射加载类对象读取类的信息
+     */
+    private void initInternalCommand() throws Exception {
+
+        SocketCommand socketCommandAnnotation = null;
+        short code = 0;
+        byte type = 0;
+        ICommand gameCommand = null;
+        //加载class文件
+        List<Class<ICommand>> classes = ClassUtil.getClassesByInterface(
+                BaseConfig.getInstance().getScanPackage(),
+                ICommand.class);
+        for (Class<?> clazz : classes) {
+            socketCommandAnnotation = clazz.getAnnotation(SocketCommand.class);
+            if (socketCommandAnnotation != null) {
+                code = socketCommandAnnotation.code();
+                type = socketCommandAnnotation.type();//获得了code和type
+                System.out.print(code + type + "-----------------------------");
+                gameCommand = (ICommand) clazz.newInstance();
+//                commands.put(((type << 16) + code), gameCommand);
+            }
+        }
+    }
+
+
+
+
+    private void initSocket() {
         //进行对netty的初始化操作
         //需要有一个解码器
         initializer = new NettyInitializer();
@@ -49,15 +84,12 @@ public class ClientSocket {
         EventLoopGroup eventLoopGroup=new NioEventLoopGroup();
         //设置的channle
         bootstrap.channel(NioSocketChannel.class);
-        //
 //        Bootstrap bootstrap=new Bootstrap();
 //        bootstrap.channel(NioSocketChannel.class);
-        bootstrap.option(ChannelOption.SO_KEEPALIVE,true);
+        bootstrap.option(ChannelOption.SO_KEEPALIVE,true);//
 //        bootstrap.group(eventLoopGroup);
 //        bootstrap.remoteAddress(host,port);
-
     }
-
 
 
     // ===========================================================
@@ -72,7 +104,11 @@ public class ClientSocket {
         if (instence == null) {
             synchronized (ClientSocket.class) {
                 if (instence == null) {
-                    instence = new ClientSocket();
+                    try {
+                        instence = new ClientSocket();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
