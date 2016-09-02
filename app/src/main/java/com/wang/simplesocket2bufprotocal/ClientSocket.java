@@ -5,7 +5,12 @@
  */
 package com.wang.simplesocket2bufprotocal;
 
+import android.content.Context;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
@@ -15,9 +20,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 /**
  * @author ssywbj
- * @since 2016/9/1 10:14
  * @version 1.0
- * <p><strong>Features draft description.主要功能介绍</strong></p>
+ *          <p><strong>Features draft description.主要功能介绍</strong></p>
+ * @since 2016/9/1 10:14
  */
 public class ClientSocket {
 
@@ -36,12 +41,19 @@ public class ClientSocket {
     // ===========================================================
     private static ClientSocket instence;
     private NettyInitializer initializer;
+    private Context context;
+    private Map<Integer, ICommand> commands = new HashMap<>();
 
 
     // ===========================================================
     // Constructors
     // ===========================================================
-    private ClientSocket() throws  Exception{
+    private ClientSocket() {
+    }
+
+
+    public void init(Context context) {
+        this.context = context;
         initInternalCommand();
         initSocket();
     }
@@ -49,29 +61,29 @@ public class ClientSocket {
     /**
      * 初始化Icommed,通过反射加载类对象读取类的信息
      */
-    private void initInternalCommand() throws Exception {
-
+    private void initInternalCommand() {
         SocketCommand socketCommandAnnotation = null;
         short code = 0;
         byte type = 0;
         ICommand gameCommand = null;
+
+        List<Class<ICommand>> classes = ClassUtil.scan(context, BaseConfig.getInstance().getScanPackage());
         //加载class文件
-        List<Class<ICommand>> classes = ClassUtil.getClassesByInterface(
-                BaseConfig.getInstance().getScanPackage(),
-                ICommand.class);
         for (Class<?> clazz : classes) {
             socketCommandAnnotation = clazz.getAnnotation(SocketCommand.class);
             if (socketCommandAnnotation != null) {
                 code = socketCommandAnnotation.code();
                 type = socketCommandAnnotation.type();//获得了code和type
                 System.out.print(code + type + "-----------------------------");
-                gameCommand = (ICommand) clazz.newInstance();
-//                commands.put(((type << 16) + code), gameCommand);
+                try {
+                    gameCommand = (ICommand) clazz.newInstance();
+                    commands.put(((type << 16) + code), gameCommand);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
-
-
 
 
     private void initSocket() {
@@ -81,12 +93,12 @@ public class ClientSocket {
         //开始一个客户端实例
         Bootstrap bootstrap = new Bootstrap();
         //开启一个事件的线程组
-        EventLoopGroup eventLoopGroup=new NioEventLoopGroup();
+        EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         //设置的channle
         bootstrap.channel(NioSocketChannel.class);
 //        Bootstrap bootstrap=new Bootstrap();
 //        bootstrap.channel(NioSocketChannel.class);
-        bootstrap.option(ChannelOption.SO_KEEPALIVE,true);//
+        bootstrap.option(ChannelOption.SO_KEEPALIVE, true);//
 //        bootstrap.group(eventLoopGroup);
 //        bootstrap.remoteAddress(host,port);
     }
@@ -98,9 +110,10 @@ public class ClientSocket {
 
     /**
      * netty 管理的单例
+     *
      * @return
      */
-    public static ClientSocket getInstence(){
+    public static ClientSocket getInstence() {
         if (instence == null) {
             synchronized (ClientSocket.class) {
                 if (instence == null) {
@@ -114,7 +127,6 @@ public class ClientSocket {
         }
         return instence;
     }
-
 
 
     // ===========================================================

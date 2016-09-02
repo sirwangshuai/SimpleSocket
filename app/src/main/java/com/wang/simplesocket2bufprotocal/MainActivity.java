@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.wang.simplesocket2bufprotocal.utils.Scanner;
+
 /**
  * 写这个类,是为了socket的基本使用
  * 学习目标学会socket的基本使用,可以用来简单的即时通信传输
@@ -16,7 +18,8 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		ClientSocket.getInstence();
+//		ClientSocket.getInstence();
+//		Scanner.scan(this,"com.wang.simplesocket2bufprotocal.command");
 	}
 
 	/**

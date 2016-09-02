@@ -7,6 +7,8 @@ package com.wang.simplesocket2bufprotocal;
 
 
 
+import android.content.Context;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -24,6 +26,9 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import dalvik.system.DexFile;
+import dalvik.system.PathClassLoader;
+
 /**
  * 类加载工具
  *
@@ -38,6 +43,33 @@ public final class ClassUtil {
     private ClassUtil() {
 
     }
+
+
+    public static List<Class<ICommand>> scan(Context ctx, String entityPackage) {
+        List<Class<ICommand>> classes = new ArrayList<>();
+        try {
+            PathClassLoader classLoader = (PathClassLoader) Thread
+                    .currentThread().getContextClassLoader();
+
+            DexFile dex = new DexFile(ctx.getPackageResourcePath());
+            Enumeration<String> entries = dex.entries();
+            while (entries.hasMoreElements()) {
+                String entryName = entries.nextElement();
+                if (entryName.contains(entityPackage)) {
+                    Class<?> entryClass = Class.forName(entryName, true,classLoader);//疑问：Class.forName(entryName);这种方式不知道为什么返回null，哪位大神知道原因，请指点一下小弟吧  感激不尽
+                    SocketCommand annotation = entryClass.getAnnotation(SocketCommand.class);
+                    if (annotation != null) {
+                        classes.add((Class<ICommand>) entryClass);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return classes;
+    }
+
+
 
     /**
      * 取得某一类所在包的所有类名 不含迭代
@@ -224,6 +256,7 @@ public final class ClassUtil {
                 }
             }
         } catch (IOException e) {
+            e.printStackTrace();
 //            LogUtil.error("get classes error.", e);
         }
         return resultClasses;
