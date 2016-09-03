@@ -18,8 +18,12 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-//		ClientSocket.getInstence();
 //		Scanner.scan(this,"com.wang.simplesocket2bufprotocal.command");
+		ClientSocket.getInstence().connect();
+		ClientSocket.getInstence().connect();
+		ClientSocket.getInstence().connect();
+		ClientSocket.getInstence().connect();
+		ClientSocket.getInstence().connect();
 	}
 
 	/**

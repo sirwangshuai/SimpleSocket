@@ -1,29 +1,23 @@
 /**
  * Copyright (C)  2016 深圳市狗尾草智能科技有限公司
  * SimpleSocket2Bufprotocal
- * BaseConfig.java
+ * ConnectHander.java
  */
-package com.wang.simplesocket2bufprotocal;
+package com.wang.simplesocket2bufprotocal.handler;
 
 /**
  * @author ssywbj
- * @since 2016/9/1 20:09
+ * @since 2016/9/2 21:47
  * @version 1.0
  * <p><strong>Features draft description.主要功能介绍</strong></p>
  */
-public class BaseConfig {
+public class ConnectHander {
 
     // ===========================================================
     // Constants
     // ===========================================================
 
-    private static final String TAG = BaseConfig.class.getSimpleName();
-    private static Object instance;
-
-
-    public static String scanPackageName = "com.wang.simplesocket2bufprotocal.command";
-
-
+    private static final String TAG = ConnectHander.class.getSimpleName();
 
     // ===========================================================
     // Static Fields

@@ -7,13 +7,17 @@ package com.wang.simplesocket2bufprotocal;
 
 import android.content.Context;
 
+import com.wang.simplesocket2bufprotocal.listener.NettyChannelFutureListener;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -43,6 +47,10 @@ public class ClientSocket {
     private NettyInitializer initializer;
     private Context context;
     private Map<Integer, ICommand> commands = new HashMap<>();
+    private Bootstrap bootstrapm;
+    private boolean isConnected;
+    private Channel session;
+    private NettyChannelFutureListener mFutureListener;
 
 
     // ===========================================================
@@ -67,7 +75,7 @@ public class ClientSocket {
         byte type = 0;
         ICommand gameCommand = null;
 
-        List<Class<ICommand>> classes = ClassUtil.scan(context, BaseConfig.getInstance().getScanPackage());
+        List<Class<ICommand>> classes = ClassUtil.scan(context, BaseConfig.scanPackageName);
         //加载class文件
         for (Class<?> clazz : classes) {
             socketCommandAnnotation = clazz.getAnnotation(SocketCommand.class);
@@ -91,22 +99,35 @@ public class ClientSocket {
         //需要有一个解码器
         initializer = new NettyInitializer();
         //开始一个客户端实例
-        Bootstrap bootstrap = new Bootstrap();
+        bootstrapm = new Bootstrap();
         //开启一个事件的线程组
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-        //设置的channle
-        bootstrap.channel(NioSocketChannel.class);
-//        Bootstrap bootstrap=new Bootstrap();
-//        bootstrap.channel(NioSocketChannel.class);
-        bootstrap.option(ChannelOption.SO_KEEPALIVE, true);//
-//        bootstrap.group(eventLoopGroup);
-//        bootstrap.remoteAddress(host,port);
+        //设置事件的group的线程组
+        bootstrapm.group(eventLoopGroup);
+        //指定channel类型
+        bootstrapm.channel(NioSocketChannel.class);
+        //保活
+        bootstrapm.option(ChannelOption.SO_KEEPALIVE, false);
+        //加入初始化的handler
+        bootstrapm.handler(initializer);
+        //设置ip 端口号,连接的时候调用
+        bootstrapm.remoteAddress("58.67.213.148", 6030);
+//      bootstrap.connect().addListener(new ConnectionListener(this));
+
     }
 
 
-    // ===========================================================
-    // Getter or Setter
-    // ===========================================================
+    public void connect() {
+        //避免重复的调用connect方法,优雅清晰的代码.哈哈
+        if (!isConnected) {
+            isConnected = true;
+            ChannelFuture channelFuture = this.bootstrapm.connect();
+            session = channelFuture.channel();
+            channelFuture.removeListener(mFutureListener);//这一步是不是必须的呢
+            channelFuture.addListener(mFutureListener);
+        }
+    }
+
 
     /**
      * netty 管理的单例
@@ -126,6 +147,10 @@ public class ClientSocket {
             }
         }
         return instence;
+    }
+
+    public void createBootstrap(Bootstrap bootstrap, EventLoop loop) {
+
     }
 
 
